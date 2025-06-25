@@ -16,7 +16,7 @@ import {
   differenceInDays,
   addDays,
 } from "date-fns";
-import { es, enUS } from "date-fns/locale";
+import { es } from "date-fns/locale";
 import { useForm, ValidationError } from "@formspree/react";
 import { useTranslation } from "react-i18next";
 
@@ -415,7 +415,9 @@ interface DocumentConfig {
   description: string;
 }
 
-const getDocumentosBaseConfig = (t: any): Record<string, DocumentConfig> => ({
+const getDocumentosBaseConfig = (
+  t: (key: string) => string
+): Record<string, DocumentConfig> => ({
   dniPasaporte: {
     label: t("documents.dni_passport"),
     description: t("documents.dni_passport_description"),
@@ -569,7 +571,9 @@ interface FileUploadProps {
   validationErrors?: FileValidationError[];
 }
 
-const FileUploadField: React.FC<FileUploadProps & { t: any }> = ({
+const FileUploadField: React.FC<
+  FileUploadProps & { t: (key: string) => string }
+> = ({
   id,
   label,
   description,
@@ -702,7 +706,7 @@ const FileUploadField: React.FC<FileUploadProps & { t: any }> = ({
 
 export default function SolicitudReservaForm() {
   // Initialize translation hook
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
 
   // Initialize Formspree hook
   const [formspreeState, handleFormspreeSubmit] = useForm("mwpbqgjn");
@@ -711,13 +715,12 @@ export default function SolicitudReservaForm() {
   const documentosBaseConfig = useMemo(() => getDocumentosBaseConfig(t), [t]);
 
   const [formState, setFormState] = useState<FormState>(initialFormState);
-  const [progress, setProgress] = useState(0);
+  const [, setProgress] = useState(0);
   const [submissionStatus, setSubmissionStatus] = useState<
     "idle" | "submitting" | "success" | "error"
   >("idle");
   const [estimatedPriceInfo, setEstimatedPriceInfo] =
     useState<EstimatedPriceResult>({ isAvailable: false });
-  const [currentStep, setCurrentStep] = useState(0);
   const [showTooltip, setShowTooltip] = useState(false);
   const estanciaDuracionMeses = useMemo(() => {
     if (formState.checkInDate && formState.checkOutDate) {
@@ -750,14 +753,19 @@ export default function SolicitudReservaForm() {
   }, [estanciaDuracionMeses]);
 
   // Determinar el número total de pasos según el tipo de estancia
+  // Currently not used but kept for future implementation
+  /*
   const totalSteps = useMemo(() => {
     if (!tipoEstanciaClasificada) return 4;
     if (tipoEstanciaClasificada === "Hotel") return 2;
     if (tipoEstanciaRequisitos === "corta") return 3;
     return 4;
   }, [tipoEstanciaClasificada, tipoEstanciaRequisitos]);
+  */
 
   // Actualizar el paso actual basado en el progreso del formulario
+  // Currently not used but kept for future implementation
+  /*
   useEffect(() => {
     if (formState.checkInDate && formState.checkOutDate) {
       setCurrentStep(1);
@@ -786,6 +794,7 @@ export default function SolicitudReservaForm() {
       setCurrentStep(0);
     }
   }, [formState, tipoEstanciaClasificada, tipoEstanciaRequisitos]);
+  */
 
   useEffect(() => {
     const priceResult = calculateEstimatedPrice(
@@ -932,6 +941,7 @@ export default function SolicitudReservaForm() {
     tipoEstanciaRequisitos,
     documentosRequeridos,
     estimatedPriceInfo.isAvailable,
+    camposObligatoriosBase.length,
   ]);
 
   const handleFileChange = (id: keyof FormState, files: File[]) => {
@@ -1047,7 +1057,6 @@ export default function SolicitudReservaForm() {
     formData.append("opcionPago", formState.opcionPago);
 
     // Add document files with validation (paid Formspree plan)
-    let totalUploadSize = 0;
     let hasValidationErrors = false;
 
     documentosRequeridos.forEach((docKey) => {
@@ -1067,7 +1076,6 @@ export default function SolicitudReservaForm() {
           formData.append(`${docKey}_${index}`, file);
           formData.append(`${docKey}_${index}_name`, file.name);
           formData.append(`${docKey}_${index}_size`, formatFileSize(file.size));
-          totalUploadSize += file.size;
         });
       }
     });
@@ -1301,6 +1309,8 @@ export default function SolicitudReservaForm() {
     tipoEstanciaRequisitos,
     documentosRequeridos,
     estimatedPriceInfo.isAvailable,
+    documentosBaseConfig,
+    t,
   ]);
 
   // Calcular los ingresos mínimos requeridos (2x el precio mensual)
