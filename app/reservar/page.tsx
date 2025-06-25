@@ -1,27 +1,45 @@
-import SolicitudReservaForm from "@/components/solicitud-reserva-form"
-import { MapPin } from "lucide-react"
+"use client";
+
+import SolicitudReservaForm from "@/components/solicitud-reserva-form";
+import LanguageSelector from "@/components/language-selector";
+import { MapPin } from "lucide-react";
+import { useI18n } from "@/hooks/use-i18n";
 
 export default function ReservaPage() {
+  const { t, isInitialized } = useI18n();
+
+  // Show loading state while i18n initializes
+  if (!isInitialized) {
+    return (
+      <div className="bg-white min-h-screen flex items-center justify-center">
+        <div className="text-gray-600">{t("common.loading")}</div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-slate-900 text-white py-8 px-6 md:px-12">
-        <h1 className="text-5xl font-bold">node</h1>
-      </header>
+    <div className="bg-white" style={{ minHeight: "1800px" }}>
       <main className="py-8 px-4 md:px-8 lg:px-16">
-        <div className="max-w-3xl mx-auto bg-white p-6 md:p-8 rounded-lg shadow-md">
-          <div className="flex items-start mb-2">
-            <MapPin className="h-7 w-7 text-orange-600 mr-3 mt-1 flex-shrink-0" />
-            <h2 className="text-2xl md:text-3xl font-semibold text-gray-800">Solicitud de Reserva</h2>
+        <div className="max-w-3xl mx-auto bg-white p-6 md:p-8 rounded-lg shadow-lg border border-gray-200">
+          <div className="flex items-start justify-between mb-8">
+            <div className="flex items-start">
+              <MapPin className="h-7 w-7 text-orange-600 mr-3 mt-1 flex-shrink-0" />
+              <div>
+                <h2 className="text-2xl md:text-3xl font-semibold text-gray-800 mb-1">
+                  {t("form.title")}
+                </h2>
+                <p className="text-gray-600">
+                  {t("form_sections.personal_info_description")}
+                </p>
+              </div>
+            </div>
+            <div className="flex-shrink-0">
+              <LanguageSelector />
+            </div>
           </div>
-          <p className="text-gray-600 mb-8 ml-10">
-            Adjunta la documentación necesaria para completar tu reserva y asegurar tu alojamiento.
-          </p>
           <SolicitudReservaForm />
         </div>
       </main>
-      <footer className="text-center py-4 text-gray-600 text-sm">
-        © {new Date().getFullYear()} Node Properties. Todos los derechos reservados.
-      </footer>
     </div>
-  )
+  );
 }
